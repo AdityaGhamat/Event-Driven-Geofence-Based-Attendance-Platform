@@ -1,0 +1,9 @@
+PORT=3000
+DATABASE_URL=mongodb://localhost:27017/new-attendance-application-2026
+COOKIE_SECRET_KEY=sshhsshh
+COOKIE_REFRESH_SECRET = sshhsshhsshhsshh
+REDIS_URL=rediss://default:AaEnAAIncDFiY2JiYjFmNDlmZTQ0MDUyYTllYWU5MDQxYWVlNjBjM3AxNDEyNTU@vital-silkworm-41255.upstash.io:6379
+process.env.TZ = 'UTC';                    // Use UTC to avoid local timezone issues
+process.env.LC_ALL = 'en_US.UTF-8';        // Force a valid locale
+process.env.LANG = 'en_US.UTF-8';
+process.env.CLIENT =http://localhost:5173
