@@ -6,8 +6,12 @@ export async function authMiddleware(
   res: Response,
   next: NextFunction
 ) {
+  let tokenFromHeader;
   const tokenFromCookie = req.cookies.Authorization;
-  const tokenFromHeader = req.headers.authorization as string;
+  const authHeader = req?.headers?.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    tokenFromHeader = authHeader?.split(" ")[1];
+  }
   const token = tokenFromCookie || tokenFromHeader;
   if (!token) {
     return res.status(401).json({
@@ -29,6 +33,12 @@ export async function authMiddleware(
     req.user = decoded;
     next();
   } catch (error) {
-    console.error(error);
+    return res.status(401).json({
+      success: false,
+      active: true,
+      data: {},
+      message: "Session expired",
+      error: { message: "Invalid or expired token" },
+    });
   }
 }

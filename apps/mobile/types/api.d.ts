@@ -7,11 +7,3 @@ export interface ApiResponse<T> {
   message: string;
   errors: Record<string, any>;
 }
-
-export interface FeatureSectionProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  imageSrc: string;
-  align: "left" | "right";
-}

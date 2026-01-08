@@ -16,6 +16,7 @@ import { createSessionCookie, decodeCookie } from "./utils";
 class AuthController {
   public async CreateUser(req: Request, res: Response) {
     const userBody = createUserSchema.safeParse(req.body);
+    console.log(userBody);
     if (!userBody.success) {
       return sendZodError(res, userBody.error);
     }
@@ -58,7 +59,6 @@ class AuthController {
       process.env.COOKIE_REFRESH_SECRET as string,
       { expiresIn: "30m" }
     );
-
     res
       .status(200)
       .cookie("Authorization", cookie, {
@@ -75,12 +75,15 @@ class AuthController {
         success: true,
         active: true,
         data: user,
+        authorization: cookie,
+        refresh: refreshCookie,
         message: "",
         error: {},
       });
   }
   public async SignIn(req: Request, res: Response) {
     const userBody = loginSchema.safeParse(req.body);
+    console.log(userBody);
     if (!userBody.success) {
       return sendZodError(res, userBody.error);
     }
@@ -147,6 +150,8 @@ class AuthController {
         success: true,
         active: true,
         data: userResponse,
+        authorization: cookie,
+        refresh: refreshCookie,
         message: "Login successful",
         error: {},
       });
@@ -211,7 +216,9 @@ class AuthController {
 
   public async refresh(req: Request, res: Response) {
     const tokenFromCookie = req.cookies.RefreshToken;
-    if (!tokenFromCookie) {
+    const tokenFromBody = req.query.token;
+    const incomingRefreshToken = tokenFromCookie || tokenFromBody;
+    if (!incomingRefreshToken) {
       return res.status(401).json({
         success: false,
         active: true,
@@ -270,6 +277,8 @@ class AuthController {
             cookie,
             refreshCookie,
           },
+          authorization: cookie,
+          refresh: refreshCookie,
           message: "Login successful",
           error: {},
         });
