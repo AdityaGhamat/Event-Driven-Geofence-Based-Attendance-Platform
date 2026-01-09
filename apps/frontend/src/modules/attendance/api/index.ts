@@ -6,7 +6,7 @@ export const getAnalytics = async (employee_id?: string) => {
   let response;
   if (employee_id) {
     response = await api.get<ApiResponse<IAnalyticsResponse>>(
-      `/api/attendance/analytics/${employee_id}`
+      `/api/attendance/analytics?uid=${employee_id}`
     );
   } else {
     response = await api.get<ApiResponse<IAnalyticsResponse>>(

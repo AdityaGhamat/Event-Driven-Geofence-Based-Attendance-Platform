@@ -169,7 +169,7 @@ class AttendanceController {
   public async userDashboard(req: Request, res: Response) {
     try {
       let userId;
-      const uid = req.params.uid;
+      const uid = req.query.uid as string;
       if (uid) {
         userId = new Types.ObjectId(uid);
       } else {
