@@ -1,5 +1,4 @@
 import { Tabs, Redirect } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import { ActivityIndicator, View } from "react-native";
 import {
@@ -10,8 +9,8 @@ import {
 } from "lucide-react-native";
 
 export default function DashBoardLayout() {
-  const { isAuthenticated, loading } = useAuth();
-
+  const { isAuthenticated, loading, user } = useAuth();
+  const hasOffice = user?.office;
   if (loading) {
     return (
       <View
@@ -50,15 +49,18 @@ export default function DashBoardLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="attendance"
         options={{
           title: "Attendance",
+          href: hasOffice ? "/(dashboard)/attendance" : null,
           tabBarIcon: ({ color, size }) => (
             <CalendarCheck size={size} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
