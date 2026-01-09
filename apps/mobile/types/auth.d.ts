@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ApiResponse } from "./api";
+import { updatePasswordSchema } from "@/lib/validations/auth";
 export interface IUser {
   email: string;
   name: string;
@@ -35,3 +36,4 @@ export interface IProfileCardProps {
   image: string;
 }
 export type IUserResponse = ApiResponse<IUser>;
+export type IUpdatePassword = z.infer<typeof updatePasswordSchema>;

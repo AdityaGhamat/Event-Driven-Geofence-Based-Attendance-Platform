@@ -17,6 +17,7 @@ import { loginSchema } from "@/lib/validations/auth";
 import { login } from "@/api/auth";
 import * as SecureStore from "expo-secure-store";
 import { useAuth } from "@/hooks/useAuth";
+import { notify } from "@/components/ui/notify";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -48,7 +49,7 @@ const Login = () => {
         router.push("/");
       }
     } catch (error) {
-      Alert.alert("Login Failed", "Something went wrong");
+      notify.error("Login Failed", "Something went wrong");
     }
   };
 

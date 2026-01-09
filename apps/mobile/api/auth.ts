@@ -1,6 +1,6 @@
 import { ApiResponse } from "@/types/api";
 import { api } from "./api";
-import { IUser, IUserResponse } from "@/types/auth";
+import { IUpdatePassword, IUser, IUserResponse } from "@/types/auth";
 
 export const register = async (
   name: string,
@@ -33,5 +33,18 @@ export const getProfile = async (uid?: string) => {
   } else {
     response = await api.get<IUserResponse>(`/api/auth/profile`);
   }
+  return response.data;
+};
+
+export const logOut = async () => {
+  const response = await api.get<ApiResponse<any>>("/api/auth/logout");
+  return response.data;
+};
+
+export const updatePassword = async (data: IUpdatePassword) => {
+  const response = await api.patch<ApiResponse<any>>(
+    "/api/auth/update-password",
+    data
+  );
   return response.data;
 };
