@@ -13,62 +13,40 @@ import UserModel from "../auth/document/auth.document";
 import { Types } from "mongoose";
 import { sendZodError } from "../core/errors/zodError.errors";
 import client from "../attendance/config/redis.config";
+import { sendApiResponse } from "../core/response/apiResponse";
+
 class OfficeController {
   //authmiddleware & adminmiddlewar
   public async createOffice(req: Request, res: Response) {
-    //request body
     const reqBody = createOfficeSchema.safeParse(req.body);
     if (!reqBody.success) {
       return sendZodError(res, reqBody.error);
     }
-    //user id
     const admin = req.user.user_id;
-    //fetching user by Admin
     const user = await UserModel.findById(admin);
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User is not found",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "User is not found" },
       });
     }
     if (user?.office) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User is already in office",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "User is already in office" },
       });
     }
     const new_office = new OfficeModel(reqBody.data);
-
     new_office.office_admin.push(admin);
-
     new_office.workers.push(admin);
-
     await new_office.save();
 
     user!.office = new_office._id;
-
     user.role = "super_admin";
-
     await user!.save();
-
     await client.del(`profile:${user._id}`);
 
-    res.status(202).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 202, {
       data: new_office,
       message: "Create new office",
-      error: {},
     });
   }
 
@@ -83,12 +61,8 @@ class OfficeController {
     const admin = await UserModel.findById(adminId);
 
     if (!admin || !admin.office) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
+      return sendApiResponse(res, 400, {
+        errors: {
           message:
             "You must be assigned to an office to update its coordinates.",
         },
@@ -104,23 +78,14 @@ class OfficeController {
     );
 
     if (!updatedOffice) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Office not found.",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "Office not found." },
       });
     }
     await client.del(`profile:${adminId}`);
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: updatedOffice,
       message: "Office coordinates updated successfully",
-      error: {},
     });
   }
 
@@ -141,23 +106,14 @@ class OfficeController {
       { new: true }
     );
     if (!updatedOffice) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Failed to update working hours of office",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "Failed to update working hours of office" },
       });
     }
     await client.del(`profile:${adminId}`);
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: updatedOffice,
       message: "Updated working days of office",
-      error: {},
     });
   }
 
@@ -179,24 +135,16 @@ class OfficeController {
       { new: true }
     );
     if (!updatedOffice) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Failed to update working hours",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "Failed to update working hours" },
       });
     }
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: updatedOffice,
       message: "Updated working times of office",
-      error: {},
     });
   }
+
   //authmiddleware & adminmiddleware
   public async changeActiveStatus(req: Request, res: Response) {
     const reqBody = changeActiveStatusSchema.safeParse(req.body);
@@ -217,22 +165,13 @@ class OfficeController {
     await client.del(`profile:${adminId}`);
 
     if (!updatedOffice) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Failed to update office status",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "Failed to update office status" },
       });
     }
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: updatedOffice,
       message: "Updated working times of office",
-      error: {},
     });
   }
 
@@ -240,23 +179,13 @@ class OfficeController {
     const { rad } = req.query;
     console.log(`radius : ${rad}`);
     if (!rad) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Radius is not provided in query",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "Radius is not provided in query" },
       });
     }
     if (Number(rad) < 10 || Number(rad) > 100) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
+      return sendApiResponse(res, 400, {
+        errors: {
           message: "Radius is either less than 10 or greater than 100",
         },
       });
@@ -266,26 +195,14 @@ class OfficeController {
       .select(["_id", "office"])
       .lean();
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "User not found" },
       });
     }
     const office = await OfficeModel.findById(user?.office);
     if (!office) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Office not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "Office not found" },
       });
     }
     const updatedOffice = await OfficeModel.findByIdAndUpdate(
@@ -297,12 +214,9 @@ class OfficeController {
     ).select(["_id", "uid", "name", "geofence_radius"]);
     console.log(`updatedOffice : ${updatedOffice}`);
     await client.del(`profile:${user._id}`);
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: updatedOffice,
       message: "Updated geofence radius of office",
-      error: {},
     });
   }
 
@@ -324,12 +238,8 @@ class OfficeController {
       });
       console.log(office);
       if (!office) {
-        return res.status(404).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
+        return sendApiResponse(res, 404, {
+          errors: {
             message: "You are not working in office or Office does not found",
           },
         });
@@ -340,14 +250,8 @@ class OfficeController {
         new_admin.role === "admin" ||
         new_admin.role === "super_admin"
       ) {
-        return res.status(404).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
-            message: "new admin not found or is already a admin",
-          },
+        return sendApiResponse(res, 404, {
+          errors: { message: "new admin not found or is already a admin" },
         });
       }
       await Promise.all([
@@ -359,20 +263,12 @@ class OfficeController {
         ),
         UserModel.findByIdAndUpdate(new_admin._id, { role: "admin" }),
       ]);
-      res.status(200).json({
-        success: true,
-        active: true,
-        data: {},
+      return sendApiResponse(res, 200, {
         message: "Admin has been updated",
-        error: {},
       });
     } catch (error: any) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
+      return sendApiResponse(res, 400, {
+        errors: {
           message: `Failed to update admin due to ${error.message}`,
           error: error,
         },
@@ -396,26 +292,16 @@ class OfficeController {
         isActive: true,
       });
       if (!office) {
-        return res.status(404).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
+        return sendApiResponse(res, 404, {
+          errors: {
             message: "You are not working in office or Office does not found",
           },
         });
       }
       const new_admin = await UserModel.findById(reqBody.data.new_adminId);
       if (!new_admin) {
-        return res.status(404).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
-            message: "new admin not found or is already a admin",
-          },
+        return sendApiResponse(res, 404, {
+          errors: { message: "new admin not found or is already a admin" },
         });
       }
       await Promise.all([
@@ -431,20 +317,12 @@ class OfficeController {
           role: "user",
         }),
       ]);
-      res.status(200).json({
-        success: true,
-        active: true,
-        data: {},
+      return sendApiResponse(res, 200, {
         message: "Admin has been updated",
-        error: {},
       });
     } catch (error: any) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
+      return sendApiResponse(res, 400, {
+        errors: {
           message: `Failed to update admin due to ${error.message}`,
           error: error,
         },
@@ -459,14 +337,8 @@ class OfficeController {
     const officeId = user!.office;
     const office = await OfficeModel.findById(officeId);
     if (!office) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "office not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "office not found" },
       });
     }
     const resBody = {
@@ -477,12 +349,9 @@ class OfficeController {
       workStartTime: office.workStartTime,
       workEndTime: office.workEndTime,
     };
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: resBody,
       message: "Updated working times of office",
-      error: {},
     });
   }
 
@@ -498,22 +367,13 @@ class OfficeController {
         select: "name email role isActive",
       });
     if (!office) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Office not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "Office not found" },
       });
     }
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: office.workers,
       message: "Office workers are fetched",
-      errors: {},
     });
   }
 
@@ -523,14 +383,8 @@ class OfficeController {
     const search = typeof q === "string" ? q : "";
     const searchTerm = search ? search.trim() : "";
     if (!searchTerm) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "query not provided",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "query not provided" },
       });
     }
     const pageParsed = parseInt(page as string);
@@ -547,9 +401,7 @@ class OfficeController {
       OfficeModel.countDocuments(query),
     ]);
 
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: {
         offices,
         total,
@@ -557,7 +409,6 @@ class OfficeController {
         limit: limitParsed,
       },
       message: "Office has been found",
-      errors: {},
     });
   }
 }

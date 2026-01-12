@@ -5,7 +5,7 @@ export function createSessionCookie(
   payload: Record<string, any>,
   secret: string,
   options: Record<string, string>
-): String {
+): string {
   const cookie = jwt.sign(payload, secret, options);
   return cookie;
 }

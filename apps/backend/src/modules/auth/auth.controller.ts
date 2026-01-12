@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import UserModel from "./document/auth.document";
-
 import {
   createUserSchema,
   loginSchema,
@@ -12,6 +11,7 @@ import OfficeModel from "../office/document/office.document";
 import mongoose, { Types } from "mongoose";
 import { sendZodError } from "../core/errors/zodError.errors";
 import { createSessionCookie, decodeCookie } from "./utils";
+import { sendApiResponse } from "../core/response/apiResponse";
 
 class AuthController {
   public async CreateUser(req: Request, res: Response) {
@@ -23,14 +23,8 @@ class AuthController {
     }
     const user = new UserModel(userBody.data);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Failed to create user",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "Failed to create user" },
       });
     }
     const emailCheck = await UserModel.findOne({
@@ -39,12 +33,8 @@ class AuthController {
       .select(["name", "email", "role", "_id", "office"])
       .populate("office", "_id name isActive");
     if (emailCheck) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
+      return sendApiResponse(res, 404, {
+        errors: {
           message: "Email is already created, please login to continue",
         },
       });
@@ -60,8 +50,9 @@ class AuthController {
       process.env.COOKIE_REFRESH_SECRET as string,
       { expiresIn: "30m" }
     );
+
+    // Set cookies first
     res
-      .status(200)
       .cookie("Authorization", cookie, {
         httpOnly: true,
         sameSite: "lax",
@@ -71,17 +62,15 @@ class AuthController {
         httpOnly: true,
         sameSite: "lax",
         maxAge: 30 * 60 * 1000,
-      })
-      .json({
-        success: true,
-        active: true,
-        data: user,
-        authorization: cookie,
-        refresh: refreshCookie,
-        message: "",
-        error: {},
       });
+
+    return sendApiResponse(res, 200, {
+      data: user,
+      authorization: cookie,
+      refresh: refreshCookie,
+    });
   }
+
   public async SignIn(req: Request, res: Response) {
     const userBody = loginSchema.safeParse(req.body);
 
@@ -95,14 +84,8 @@ class AuthController {
       .populate("office", "_id name isActive");
 
     if (!emailCheck) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Email not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "Email not found" },
       });
     }
     const passwordCheck = await emailCheck.comparePassword(
@@ -110,14 +93,8 @@ class AuthController {
     );
 
     if (!passwordCheck) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Password is incorrect",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "Password is incorrect" },
       });
     }
     const cookie = createSessionCookie(
@@ -136,7 +113,6 @@ class AuthController {
     delete userResponse.password;
 
     res
-      .status(200)
       .cookie("Authorization", cookie, {
         httpOnly: true,
         sameSite: "lax",
@@ -146,16 +122,14 @@ class AuthController {
         httpOnly: true,
         sameSite: "lax",
         maxAge: 30 * 60 * 1000,
-      })
-      .json({
-        success: true,
-        active: true,
-        data: userResponse,
-        authorization: cookie,
-        refresh: refreshCookie,
-        message: "Login successful",
-        error: {},
       });
+
+    return sendApiResponse(res, 200, {
+      data: userResponse,
+      authorization: cookie,
+      refresh: refreshCookie,
+      message: "Login successful",
+    });
   }
 
   //authmiddleware
@@ -168,49 +142,28 @@ class AuthController {
       const userId = req.user.user_id;
       const user = await UserModel.findById(userId).select(["_id", "password"]);
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
-            message: "User not found",
-          },
+        return sendApiResponse(res, 404, {
+          errors: { message: "User not found" },
         });
       }
       const comparePassword = await user.comparePassword(
         userBody.data.old_password
       );
       if (!comparePassword) {
-        return res.status(400).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
-            message: "Password does not match",
-          },
+        return sendApiResponse(res, 400, {
+          errors: { message: "Password does not match" },
         });
       }
       user.password = userBody.data.new_password;
       await user.save();
       await client.del(`profile:${user._id}`);
-      res.status(200).json({
-        success: true,
-        active: true,
-        data: {},
+
+      return sendApiResponse(res, 200, {
         message: "Successfully updated the password",
-        error: {},
       });
     } catch (error: any) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: `${error.message}`,
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: `${error.message}` },
       });
     }
   }
@@ -220,14 +173,8 @@ class AuthController {
     const tokenFromBody = req.query.token;
     const incomingRefreshToken = tokenFromCookie || tokenFromBody;
     if (!incomingRefreshToken) {
-      return res.status(401).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Refresh Token not found",
-        },
+      return sendApiResponse(res, 401, {
+        errors: { message: "Refresh Token not found" },
       });
     }
     try {
@@ -240,12 +187,8 @@ class AuthController {
       );
 
       if (!user) {
-        return res.status(401).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: { message: "User not found" },
+        return sendApiResponse(res, 401, {
+          errors: { message: "User not found" },
         });
       }
       const payload = { user_id: user?._id, email: user?.email };
@@ -259,8 +202,8 @@ class AuthController {
         process.env.COOKIE_REFRESH_SECRET as string,
         { expiresIn: "30m" }
       );
+
       res
-        .status(200)
         .cookie("Authorization", cookie, {
           httpOnly: true,
           sameSite: "lax",
@@ -270,26 +213,17 @@ class AuthController {
           httpOnly: true,
           sameSite: "lax",
           maxAge: 30 * 60 * 1000,
-        })
-        .json({
-          success: true,
-          active: true,
-          data: {
-            cookie,
-            refreshCookie,
-          },
-          authorization: cookie,
-          refresh: refreshCookie,
-          message: "Login successful",
-          error: {},
         });
+
+      return sendApiResponse(res, 200, {
+        data: { cookie, refreshCookie },
+        authorization: cookie,
+        refresh: refreshCookie,
+        message: "Login successful",
+      });
     } catch (error: any) {
-      return res.status(401).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
+      return sendApiResponse(res, 401, {
+        errors: {
           message: `${error.message || "Failed while refreshing token"}`,
         },
       });
@@ -301,30 +235,18 @@ class AuthController {
     const { user_id } = req.user;
     const userCheck = await UserModel.findById(user_id);
     if (!userCheck) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "User not found" },
       });
     }
     await client.del(`profile:${userCheck!._id}`);
-    res
-      .clearCookie("Authorization")
-      .clearCookie("RefreshToken")
-      .status(200)
-      .json({
-        success: true,
-        active: true,
-        data: {
-          name: userCheck!.name,
-        },
-        message: "User has been logged out",
-        error: {},
-      });
+
+    res.clearCookie("Authorization").clearCookie("RefreshToken");
+
+    return sendApiResponse(res, 200, {
+      data: { name: userCheck!.name },
+      message: "User has been logged out",
+    });
   }
 
   //use auth middleware here
@@ -332,24 +254,13 @@ class AuthController {
     const { user_id } = req.user;
     const userCheck = await UserModel.findById(user_id);
     if (!userCheck) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "User not found" },
       });
     }
-    res.status(200).json({
-      success: true,
-      active: true,
-      data: {
-        name: userCheck.coordinates,
-      },
+    return sendApiResponse(res, 200, {
+      data: { name: userCheck.coordinates },
       message: "Successfully fetched the location",
-      error: {},
     });
   }
 
@@ -362,14 +273,8 @@ class AuthController {
     const { user_id } = req.user;
     const userCheck = await UserModel.findById(user_id);
     if (!userCheck) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "User not found" },
       });
     }
     const { coordinates } = locationBody?.data!;
@@ -385,12 +290,9 @@ class AuthController {
       "EX",
       30 * 60
     );
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: updatedLocation,
       message: "Successfully updated location",
-      error: {},
     });
   }
 
@@ -406,22 +308,13 @@ class AuthController {
       .populate("office", "_id name isActive");
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "User not found",
-        },
+      return sendApiResponse(res, 404, {
+        errors: { message: "User not found" },
       });
     }
-    res.status(200).json({
-      success: true,
-      active: true,
+    return sendApiResponse(res, 200, {
       data: user,
       message: "Successfully fetched profile",
-      error: {},
     });
   }
 
@@ -434,12 +327,9 @@ class AuthController {
     }
     const user = await client.get(`profile:${user_id}`);
     if (user) {
-      return res.status(200).json({
-        success: true,
-        active: true,
+      return sendApiResponse(res, 200, {
         data: JSON.parse(user),
         message: "Successfully fetched profile",
-        error: {},
       });
     } else {
       const userCheck = await UserModel.findById(user_id)
@@ -449,74 +339,42 @@ class AuthController {
           "_id name isActive coordinates workingDays workStartTime workEndTime geofence_radius"
         );
       if (!userCheck) {
-        return res.status(404).json({
-          success: false,
-          active: true,
-          data: {},
-          message: "",
-          error: {
-            message: "User not found",
-          },
+        return sendApiResponse(res, 404, {
+          errors: { message: "User not found" },
         });
       }
       const key = `profile:${userCheck._id}`;
       await client.setex(key, 360, JSON.stringify(userCheck));
-      res.status(200).json({
-        success: true,
-        active: true,
+      return sendApiResponse(res, 200, {
         data: userCheck,
         message: "Successfully fetched profile",
-        error: {},
       });
     }
   }
+
   public async joinOffice(req: Request, res: Response) {
     const officeId = req.params.oi as string;
     if (!officeId) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "oi param not provided",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "oi param not provided" },
       });
     }
     const userId = req.user.user_id;
     const user = await UserModel.findById(userId);
     if (user!.office) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "user is already joined office",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "user is already joined office" },
       });
     }
     const office = await OfficeModel.findById(officeId);
     if (!office) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "office not found",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "office not found" },
       });
     }
     if (office.isDeleted) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "office has been deleted",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "office has been deleted" },
       });
     }
     const userObjectId = new Types.ObjectId(userId);
@@ -530,12 +388,8 @@ class AuthController {
       ),
     ]);
     await client.del(`profile:${user!._id}`);
-    res.status(200).json({
-      success: true,
-      active: true,
-      data: {},
+    return sendApiResponse(res, 200, {
       message: "Joined Office Successfully",
-      error: {},
     });
   }
 
@@ -546,38 +400,20 @@ class AuthController {
     const userId = req.user.user_id;
     const user = await UserModel.findById(userId);
     if (!user!.office) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "office not found",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "office not found" },
       });
     }
     //office
     const officeId = req.params.oi as string;
     if (!officeId) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "oi param not provided",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "oi param not provided" },
       });
     }
     if (user!.office.toString() !== officeId) {
-      return res.status(400).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "you are not part of this office",
-        },
+      return sendApiResponse(res, 400, {
+        errors: { message: "you are not part of this office" },
       });
     }
 
@@ -609,12 +445,8 @@ class AuthController {
 
     await client.del(`profile:${user!._id}`);
 
-    res.status(200).json({
-      success: true,
-      active: true,
-      data: {},
+    return sendApiResponse(res, 200, {
       message: "Leaved Office Successfully",
-      error: {},
     });
   }
 }

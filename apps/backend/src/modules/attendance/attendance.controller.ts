@@ -4,32 +4,23 @@ import { markAttendanceJob } from "./jobs/attendanceslot.job";
 import { getTodayDate } from "./utilities";
 import DailyAttendanceModel from "./document/dailyattendance.document";
 import AttendanceModel from "./document/attendanceslot.document";
+import { sendApiResponse } from "../core/response/apiResponse";
+
 class AttendanceController {
   public async manualMarkAttendance(req: Request, res: Response) {
     try {
       await markAttendanceJob(true);
-      return res.status(200).json({
-        success: true,
-        active: true,
-        data: {},
+      return sendApiResponse(res, 200, {
         message: "Manual attendance marking completed successfully",
-        error: {},
-        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       console.error("Manual attendance marking failed:", error);
-      return res.status(500).json({
-        success: false,
-        active: true,
-        data: {},
-        message: "",
-        error: {
-          message: "Failed to mark attendance manually",
-        },
-        timestamp: new Date().toISOString(),
+      return sendApiResponse(res, 500, {
+        errors: { message: "Failed to mark attendance manually" },
       });
     }
   }
+
   private calculateActiveSlots(events: any[]): string[] {
     if (!events || events.length === 0) return [];
     const activeSlots = new Set<string>();
@@ -38,20 +29,17 @@ class AttendanceController {
         const date = new Date(event.timestamp);
         const hours = date.getHours();
         const minutes = date.getMinutes();
-
         const roundedMinutes = Math.floor(minutes / 15) * 15;
-
         const timeString = `${hours}:${
           roundedMinutes === 0 ? "00" : roundedMinutes
         }`;
         activeSlots.add(timeString);
       }
     });
-
     return Array.from(activeSlots);
   }
 
-  //authmiddleware
+  // authmiddleware
   public async userAnalytics(req: Request, res: Response) {
     try {
       const userId = new Types.ObjectId(req.user.user_id);
@@ -152,24 +140,22 @@ class AttendanceController {
         },
       };
 
-      return res.status(200).json({
-        success: true,
+      return sendApiResponse(res, 200, {
         data: resObject,
         message: "Analytics fetched successfully",
-        error: {},
       });
     } catch (error) {
       console.error("Analytics Error:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
+      return sendApiResponse(res, 500, {
+        errors: { message: "Internal server error" },
+      });
     }
   }
 
-  //authmiddleware
+  // authmiddleware
   private calculateTodayStats(rawSlots: any[]) {
     const presentSlots = rawSlots.filter((s) => s.status === "IN");
-    const activeSlots = presentSlots.map((s) => s.slotTime); // e.g., ["09:00", "09:15"]
+    const activeSlots = presentSlots.map((s) => s.slotTime);
     const workingMinutes = presentSlots.length * 15;
 
     // Simple logic for live status
@@ -292,17 +278,15 @@ class AttendanceController {
         },
       };
 
-      return res.status(200).json({
-        success: true,
+      return sendApiResponse(res, 200, {
         data: resObject,
         message: "Dashboard analytics fetched successfully",
-        error: {},
       });
     } catch (error) {
       console.error("Dashboard Error:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
+      return sendApiResponse(res, 500, {
+        errors: { message: "Internal server error" },
+      });
     }
   };
 }

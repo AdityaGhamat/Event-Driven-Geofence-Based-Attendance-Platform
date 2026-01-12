@@ -3,6 +3,7 @@ import AttendanceModel from "../document/attendanceslot.document";
 import UserModel from "../../auth/document/auth.document";
 import client from "../config/redis.config";
 import { getCurrentSlot, getTodayDate, haversine } from "../utilities";
+import { aggregateForUser } from "./dailyattendance.job";
 
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
@@ -41,9 +42,6 @@ export async function processOfficeAttendance(office: any) {
           office.coordinates[1]
         );
         status = distance <= office?.geofence_radius ? "IN" : "OUT";
-        console.log(
-          `User ${user.name} is ${distance.toFixed(2)}m away -> ${status}`
-        );
       }
     }
 
@@ -58,15 +56,26 @@ export async function processOfficeAttendance(office: any) {
 
   if (slots.length > 0) {
     try {
-      const result = await AttendanceModel.insertMany(slots, {
-        ordered: false,
-      });
-      console.log(`Successfully inserted ${result.length} records.`);
-    } catch (err: any) {
-      console.error(
-        "InsertMany partial failure (likely duplicates):",
-        err.message
+      // 1. Insert the raw 15-min slots
+      await AttendanceModel.insertMany(slots, { ordered: false });
+
+      // 2. 🔥 REAL-TIME AGGREGATION 🔥
+      // Immediately calculate the total day's progress for these users
+      console.log(`⚡ Updating daily stats for ${users.length} users...`);
+
+      await Promise.all(
+        users.map((user) =>
+          aggregateForUser(
+            user._id,
+            office._id,
+            date,
+            office.workStartTime,
+            office.workEndTime
+          )
+        )
       );
+    } catch (err: any) {
+      console.error("Partial failure in attendance processing:", err.message);
     }
   }
 }
@@ -81,8 +90,12 @@ export async function markAttendanceJob(force: boolean = false) {
     if (offices.length === 0) return;
 
     const now = new Date();
-    const todayWeekday = now.getDay();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const localDate = new Date(utc + istOffset);
+
+    const todayWeekday = localDate.getDay();
+    const currentMinutes = localDate.getHours() * 60 + localDate.getMinutes();
 
     let processedOffices = 0;
 

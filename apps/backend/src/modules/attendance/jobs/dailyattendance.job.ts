@@ -2,12 +2,10 @@ import UserModel from "../../auth/document/auth.document";
 import OfficeModel from "../../office/document/office.document";
 import DailyAttendanceModel from "../document/dailyattendance.document";
 import AttendanceModel from "../document/attendanceslot.document";
-import {
-  getTodayDate,
-  getWorkingDayMinutes,
-  timeToMinutes,
-} from "../utilities";
+import { getWorkingDayMinutes, timeToMinutes } from "../utilities";
 import mongoose, { Types } from "mongoose";
+
+type AttendanceStatus = "PRESENT" | "HALF_PRESENT" | "ABSENT";
 
 export async function aggregateForUser(
   userId: any,
@@ -21,13 +19,17 @@ export async function aggregateForUser(
     office: officeId,
     date,
   }).lean();
+
   const SLOT_MINUTES = 15;
   const totalSlots = slots.length;
+
   const presentSlots = slots.filter((s) => s.status === "IN").length;
   const workingMinutes = presentSlots * SLOT_MINUTES;
+
   const fulldayWorking = getWorkingDayMinutes(officeStartTime, officeEndTime);
   const halfdayWorking = fulldayWorking / 2;
-  let status = "ABSENT";
+
+  let status: AttendanceStatus = "ABSENT";
 
   if (workingMinutes >= fulldayWorking) {
     status = "PRESENT";
@@ -54,11 +56,21 @@ export async function aggregateForUser(
 }
 
 export async function dailyAttendanceAggregationJob() {
-  console.log(`[${new Date().toISOString()}] Daily aggregation job running...`);
-
   const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const todayDateString = getTodayDate();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const localDate = new Date(utc + istOffset);
+
+  const currentMinutes = localDate.getHours() * 60 + localDate.getMinutes();
+
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, "0");
+  const day = String(localDate.getDate()).padStart(2, "0");
+  const todayDateString = `${year}-${month}-${day}`;
+
+  console.log(
+    `[${localDate.toISOString()}] Daily aggregation job running for date: ${todayDateString}`
+  );
 
   try {
     const offices = await OfficeModel.find({ isActive: true }).lean();
@@ -67,9 +79,11 @@ export async function dailyAttendanceAggregationJob() {
       const endMinutes = timeToMinutes(office.workEndTime);
       const bufferMinutes = 5;
       const aggregationTriggerTime = endMinutes + bufferMinutes;
+
       if (currentMinutes < aggregationTriggerTime) {
         continue;
       }
+
       const existing = await DailyAttendanceModel.findOne({
         office: office._id,
         date: todayDateString,
@@ -78,8 +92,9 @@ export async function dailyAttendanceAggregationJob() {
       if (existing) {
         continue;
       }
+
       console.log(
-        `Aggregating completed day ${todayDateString} for office: ${
+        `🏁 Aggregating final stats for ${todayDateString} | Office: ${
           office.name || office._id
         }`
       );
