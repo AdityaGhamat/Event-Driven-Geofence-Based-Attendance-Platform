@@ -56,11 +56,8 @@ export async function processOfficeAttendance(office: any) {
 
   if (slots.length > 0) {
     try {
-      // 1. Insert the raw 15-min slots
       await AttendanceModel.insertMany(slots, { ordered: false });
 
-      // 2. 🔥 REAL-TIME AGGREGATION 🔥
-      // Immediately calculate the total day's progress for these users
       console.log(`⚡ Updating daily stats for ${users.length} users...`);
 
       await Promise.all(
