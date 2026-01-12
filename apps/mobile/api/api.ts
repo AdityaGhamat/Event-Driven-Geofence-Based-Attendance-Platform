@@ -2,7 +2,7 @@ import axios from "axios";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = "https://2381f3699175.ngrok-free.app";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export const api = axios.create({
   baseURL: BASE_URL,

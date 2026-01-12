@@ -25,7 +25,7 @@ class Server {
     dotenv.config();
     const allowedOrigins = [
       "http://localhost:5173",
-      process.env.FRONTEND_URL,
+      "https://event-driven-geofence-based-attenda.vercel.app",
     ].filter(Boolean);
     this.app.use(
       cors({
