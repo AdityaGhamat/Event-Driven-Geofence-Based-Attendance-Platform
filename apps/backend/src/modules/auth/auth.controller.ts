@@ -395,11 +395,11 @@ class AuthController {
   }
 
   public async getProfileNoCache(req: Request, res: Response) {
-    let user_id: any;
+    let user_id: string;
     if (!req.query.i) {
       user_id = req.user.user_id;
     } else {
-      user_id = req.query.i;
+      user_id = req.query.i as string;
     }
     const user = await UserModel.findById(user_id)
       .select(["name", "email", "role", "_id", "office"])
@@ -426,11 +426,11 @@ class AuthController {
   }
 
   public async getProfile(req: Request, res: Response) {
-    let user_id: any;
+    let user_id: string;
     if (!req.query.i) {
       user_id = req.user.user_id;
     } else {
-      user_id = req.query.i;
+      user_id = req.query.i as string;
     }
     const user = await client.get(`profile:${user_id}`);
     if (user) {
@@ -471,7 +471,7 @@ class AuthController {
     }
   }
   public async joinOffice(req: Request, res: Response) {
-    const officeId = req.params.oi;
+    const officeId = req.params.oi as string;
     if (!officeId) {
       return res.status(400).json({
         success: false,
@@ -557,7 +557,7 @@ class AuthController {
       });
     }
     //office
-    const officeId = req.params.oi;
+    const officeId = req.params.oi as string;
     if (!officeId) {
       return res.status(400).json({
         success: false,

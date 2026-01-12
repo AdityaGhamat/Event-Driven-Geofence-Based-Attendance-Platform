@@ -1,10 +1,9 @@
 import {
   MoreVertical,
-  Shield,
-  User,
   ShieldPlus,
   ShieldMinus,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import type { IEmployeeTableProps } from "../types";
 import { useAuth } from "../../auth/hooks/useAuth";
@@ -12,17 +11,25 @@ import { useState, useRef, useEffect } from "react";
 import { updateAdminRole, removeAdminRole } from "../api";
 import { useNavigate } from "react-router";
 import { notify } from "../../../components/Toast";
+import Loading from "../../../components/Loading";
+
 interface EmployeeTableProps {
   employees: IEmployeeTableProps[];
   onUpdate?: () => void;
+  isFetching?: boolean; // 👈 2. Make sure this prop exists
 }
 
-const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
+const EmployeeTable = ({
+  employees,
+  onUpdate,
+  isFetching,
+}: EmployeeTableProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
+  // ... (Refs and useEffect remain the same) ...
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,15 +43,13 @@ const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
 
   const canEdit = user?.role === "admin" || user?.role === "super_admin";
 
+  // ... (handleAction and onAttendanceProfile remain the same) ...
   const handleAction = async (
     action: "promote" | "demote",
     targetId: string
   ) => {
     if (!user?.office?._id) return;
-
-    setIsLoading(true);
-    setActiveMenuId(null);
-
+    setIsActionLoading(true);
     try {
       let res;
       if (action === "promote") {
@@ -52,20 +57,19 @@ const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
       } else {
         res = await removeAdminRole(user.office._id, targetId);
       }
-
       if (res.success) {
-        alert(
-          action === "promote"
-            ? "User promoted to Admin"
-            : "Admin demoted to User"
+        notify.success(
+          action === "promote" ? "Promoted" : "Demoted",
+          action === "promote" ? "User is now an Admin" : "Admin removed"
         );
         if (onUpdate) onUpdate();
+        setActiveMenuId(null);
       }
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Action failed");
+      notify.error("Action Failed", error.response?.data?.message || "Error");
     } finally {
-      setIsLoading(false);
+      setIsActionLoading(false);
     }
   };
 
@@ -80,17 +84,21 @@ const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
         navigate("/dashboard/attendance/profile", { state: employee });
       }
     } catch (error: any) {
-      notify.error(
-        "Viewing Profile",
-        error.message || "Failed to view profile"
-      );
+      notify.error("Viewing Profile", error.message);
     }
   };
+
+  // ✅ 3. USE YOUR COMPONENT HERE
+  // If the page is fetching data, show your full-screen loader instead of the table
+  if (isFetching) {
+    return <Loading />;
+  }
 
   return (
     <div className="mt-6 border border-purple-500/30 rounded-xl bg-[#3c354d] overflow-hidden shadow-2xl min-h-100 flex flex-col">
       <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex-1">
         <table className="w-full border-collapse text-left">
+          {/* ... Table Header ... */}
           <thead className="bg-[#2a253b] sticky top-0 z-10 shadow-sm">
             <tr>
               <th className="px-6 py-4 text-xs font-semibold text-white/50 uppercase tracking-wider">
@@ -128,8 +136,9 @@ const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
                     isCurrentUser
                       ? "bg-white/5 border-l-4 border-fuchsia-500"
                       : ""
-                  } group hover:bg-white/2 transition-colors duration-200`}
+                  } group hover:bg-white/2 transition-colors duration-200 cursor-pointer`}
                 >
+                  {/* ... Table Data Rows (Avatar, Email, Role, Status) ... */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-linear-to-tr from-fuchsia-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-lg">
@@ -142,49 +151,16 @@ const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
                       </div>
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white/60">
                     {employee.email}
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border
-                      ${
-                        employee.role === "admin" ||
-                        employee.role === "super_admin"
-                          ? "bg-purple-500/10 text-purple-300 border-purple-500/20"
-                          : "bg-blue-500/10 text-blue-300 border-blue-500/20"
-                      }`}
-                    >
-                      {employee.role === "admin" ||
-                      employee.role === "super_admin" ? (
-                        <Shield className="w-3 h-3" />
-                      ) : (
-                        <User className="w-3 h-3" />
-                      )}
-                      <span className="capitalize">
-                        {employee.role.replace("_", " ")}
-                      </span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border bg-blue-500/10 text-blue-300 border-blue-500/20">
+                      <span className="capitalize">{employee.role}</span>
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div
-                      className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium
-                      ${
-                        employee.isActive
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                          : "bg-red-500/10 text-red-400 border border-red-500/20"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          employee.isActive
-                            ? "bg-emerald-400 animate-pulse"
-                            : "bg-red-400"
-                        }`}
-                      />
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       {employee.isActive ? "Active" : "Inactive"}
                     </div>
                   </td>
@@ -202,56 +178,60 @@ const EmployeeTable = ({ employees, onUpdate }: EmployeeTableProps) => {
                                   : (employee?._id as string)
                               );
                             }}
-                            className={`p-2 rounded-lg transition-all ${
-                              activeMenuId === employee._id
-                                ? "bg-purple-500 text-white"
-                                : "text-white/40 hover:text-white hover:bg-white/10"
-                            }`}
+                            className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
 
-                          {/* DROPDOWN MENU */}
+                          {/* 4. Small Loader for Buttons (Keep inline Loader2 here) */}
                           {activeMenuId === employee._id && (
                             <div
                               ref={menuRef}
                               onClick={(e) => e.stopPropagation()}
-                              className="absolute right-8 top-8 w-48 bg-[#2a253b] border border-purple-500/30 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                              className="absolute right-8 top-8 w-48 bg-[#2a253b] border border-purple-500/30 rounded-xl shadow-2xl z-50 overflow-hidden"
                             >
                               <div className="p-1 flex flex-col gap-1">
                                 {employee.role === "user" ? (
                                   <button
+                                    disabled={isActionLoading}
                                     onClick={() =>
                                       handleAction(
                                         "promote",
                                         employee?._id as string
                                       )
                                     }
-                                    className="w-full text-left px-3 py-2 text-sm text-white hover:bg-purple-500 hover:text-white rounded-lg flex items-center gap-2 transition-colors"
+                                    className="w-full text-left px-3 py-2 text-sm text-white hover:bg-purple-500 rounded-lg flex items-center gap-2"
                                   >
-                                    <ShieldPlus className="w-4 h-4" />
+                                    {isActionLoading ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <ShieldPlus className="w-4 h-4" />
+                                    )}
                                     Make Admin
                                   </button>
                                 ) : (
                                   <button
+                                    disabled={isActionLoading}
                                     onClick={() =>
                                       handleAction(
                                         "demote",
                                         employee?._id as string
                                       )
                                     }
-                                    className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-500/20 hover:text-red-200 rounded-lg flex items-center gap-2 transition-colors"
+                                    className="w-full text-left px-3 py-2 text-sm text-red-300 hover:bg-red-500/20 rounded-lg flex items-center gap-2"
                                   >
-                                    <ShieldMinus className="w-4 h-4" />
+                                    {isActionLoading ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <ShieldMinus className="w-4 h-4" />
+                                    )}
                                     Remove Admin
                                   </button>
                                 )}
-
                                 <div className="h-px bg-white/10 my-1 mx-2" />
-
                                 <button
                                   onClick={() => setActiveMenuId(null)}
-                                  className="w-full text-left px-3 py-2 text-sm text-white/50 hover:bg-white/5 rounded-lg flex items-center gap-2 transition-colors"
+                                  className="w-full text-left px-3 py-2 text-sm text-white/50 hover:bg-white/5 rounded-lg flex items-center gap-2"
                                 >
                                   <XCircle className="w-4 h-4" />
                                   Cancel

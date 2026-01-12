@@ -1,4 +1,4 @@
-import { Mail, Building, Shield, User, MapPin } from "lucide-react";
+import { Mail, Building, Shield, User } from "lucide-react";
 import type { IProfileCardProps } from "../types";
 
 const ProfileCard = (props: IProfileCardProps) => {

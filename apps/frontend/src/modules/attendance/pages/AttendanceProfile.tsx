@@ -109,20 +109,20 @@ const AttendanceProfile = () => {
   );
 };
 
-const StatsCard = ({ label, value, icon, color }: any) => (
-  <div
-    className={`${color} border rounded-xl p-4 flex items-center gap-4 shadow-lg backdrop-blur-sm`}
-  >
-    <div className="p-3 bg-[#2a253b] rounded-lg border border-white/5 shadow-inner">
-      {icon}
-    </div>
-    <div>
-      <p className="text-white/50 text-xs uppercase font-bold tracking-wider">
-        {label}
-      </p>
-      <p className="text-2xl font-bold text-white mt-0.5">{value}</p>
-    </div>
-  </div>
-);
+// const StatsCard = ({ label, value, icon, color }: any) => (
+//   <div
+//     className={`${color} border rounded-xl p-4 flex items-center gap-4 shadow-lg backdrop-blur-sm`}
+//   >
+//     <div className="p-3 bg-[#2a253b] rounded-lg border border-white/5 shadow-inner">
+//       {icon}
+//     </div>
+//     <div>
+//       <p className="text-white/50 text-xs uppercase font-bold tracking-wider">
+//         {label}
+//       </p>
+//       <p className="text-2xl font-bold text-white mt-0.5">{value}</p>
+//     </div>
+//   </div>
+// );
 
 export default AttendanceProfile;

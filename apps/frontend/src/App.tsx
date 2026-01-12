@@ -13,6 +13,7 @@ const App = () => {
       }
     } catch (error: any) {
       const message = error?.response?.data?.error?.message || "Logout failed";
+      console.error(message);
     }
   };
   return (

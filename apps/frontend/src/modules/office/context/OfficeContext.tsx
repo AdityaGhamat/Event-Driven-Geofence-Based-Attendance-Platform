@@ -1,5 +1,5 @@
 import { createContext, useState, type ReactNode } from "react";
-import type { IOffice, IOfficeContext, ISearchCardProps } from "../types";
+import type { IOfficeContext, ISearchCardProps } from "../types";
 
 export const OfficeContext = createContext<IOfficeContext | undefined>(
   undefined

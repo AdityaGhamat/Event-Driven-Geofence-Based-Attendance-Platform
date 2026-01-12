@@ -1,0 +1,21 @@
+services:
+  backend:
+    container_name: backend_app
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./apps/backend/.env
+    restart: always
+  frontend:
+    container_name: frontend_app
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    env_file:
+      - ./apps/frontend/.env
+    restart: always
