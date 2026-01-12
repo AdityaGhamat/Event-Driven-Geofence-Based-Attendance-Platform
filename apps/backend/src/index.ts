@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import express from "express";
 import { Express } from "express";
+import type { Request, Response } from "express";
 import dotenv from "dotenv";
 import apiRoutes from "./routes";
 import { errorMiddleware } from "./modules/core/middlewares/errormiddleware";
@@ -47,6 +48,15 @@ class Server {
   }
 
   private routes() {
+    this.app.get("/", (req: Request, res: Response) => {
+      res.status(200).json({
+        status: "success",
+        message: "Geofence Attendance System API is operational",
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || "development",
+        uptime: `${process.uptime().toFixed(2)}s`,
+      });
+    });
     this.app.use("/api", apiRoutes);
   }
 
@@ -59,7 +69,7 @@ class Server {
     scheduleWorker.run();
     aggregationWorker.run();
     await initSchedule();
-    this.app.listen(port);
+    this.app.listen(port, "0.0.0.0");
   }
 }
 
