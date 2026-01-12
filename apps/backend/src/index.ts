@@ -27,7 +27,7 @@ class Server {
     const allowedOrigins = [
       "http://localhost:5173",
       "https://event-driven-geofence-based-attenda.vercel.app",
-      "https://amazing-strudel-fbd896.netlify.app/",
+      "https://amazing-strudel-fbd896.netlify.app",
     ].filter(Boolean);
     this.app.use(
       cors({
