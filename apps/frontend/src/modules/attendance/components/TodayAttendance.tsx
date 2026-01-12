@@ -1,23 +1,18 @@
 import { CalendarCheck, Clock3, Hammer, ChartNoAxesColumn } from "lucide-react";
 import type { TodayAttendanceProps } from "../types/index";
-
+import { resolveDate } from "../utils";
 const TodayAttendance = ({ slots, stats }: TodayAttendanceProps) => {
   const workingMinutes = stats?.workingMinutes || 0;
   const status = stats?.status || "NOT MARKED";
 
   const activeTimeStrings = stats?.activeSlots || [];
+  const resolvedDate = resolveDate(stats?.date);
 
-  const dateStr = stats?.date
-    ? new Date(stats.date).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : new Date().toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
+  const dateStr = resolvedDate.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
   const workingHours = (workingMinutes / 60).toFixed(1);
 

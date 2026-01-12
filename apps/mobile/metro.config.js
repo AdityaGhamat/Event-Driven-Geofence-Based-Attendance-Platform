@@ -14,7 +14,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
-
 config.resolver.extraNodeModules = {
   react: path.resolve(workspaceRoot, "node_modules/react"),
   "react-dom": path.resolve(workspaceRoot, "node_modules/react-dom"),
@@ -22,5 +21,10 @@ config.resolver.extraNodeModules = {
 };
 
 config.resolver.disableHierarchicalLookup = true;
-
+config.resolver.sourceExts = [
+  ...config.resolver.sourceExts,
+  "ts",
+  "tsx",
+  "json",
+];
 module.exports = withNativeWind(config, { input: "./global.css" });

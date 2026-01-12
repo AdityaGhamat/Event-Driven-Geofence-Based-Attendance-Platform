@@ -15,6 +15,7 @@ declare global {
       COOKIE_SECRET_KEY: string;
       COOKIE_REFRESH_SECRET: string;
       REDIS_URL: string;
+      BULL_MQ_REDIS: string;
       CLIENT: string;
     }
   }

@@ -6,9 +6,13 @@ import apiRoutes from "./routes";
 import { errorMiddleware } from "./modules/core/middlewares/errormiddleware";
 import { connectDb } from "./modules/core/utils/connectdb";
 import cors from "cors";
+
+import { initSchedule } from "./modules/attendance/cron/schedule";
+import { scheduleWorker } from "./modules/attendance/worker/attendance.worker";
+import { aggregationWorker } from "./modules/attendance/worker/aggregation.worker";
+
 //cron jobs
-import "./modules/attendance/cron/attendance.cron";
-import "./modules/attendance/cron/dailyattendance.cron";
+
 class Server {
   app: Express;
   constructor() {
@@ -52,6 +56,9 @@ class Server {
 
   public async start(port: number) {
     await connectDb();
+    scheduleWorker.run();
+    aggregationWorker.run();
+    await initSchedule();
     this.app.listen(port);
   }
 }

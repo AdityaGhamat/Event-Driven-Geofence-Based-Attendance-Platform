@@ -20,7 +20,7 @@ export const createOfficeSchema = z.object({
     .min(5, "Minimum 5 Characters Required")
     .max(100, "Maximum 100 Characters Are Permitted"),
   workingDays: z
-    .array(z.number().int().min(1).max(7))
+    .array(z.number().int().min(1).max(6))
     .min(1)
     .max(7)
     .refine((days) => new Set(days).size === days.length, {

@@ -1,7 +1,7 @@
 import { ApiResponse } from "@/types/api";
 import { api } from "./api";
 import { IUpdatePassword, IUser, IUserResponse } from "@/types/auth";
-
+import type { updateLocationType } from "@/types/auth";
 export const register = async (
   name: string,
   email: string,
@@ -44,6 +44,14 @@ export const logOut = async () => {
 export const updatePassword = async (data: IUpdatePassword) => {
   const response = await api.patch<ApiResponse<any>>(
     "/api/auth/update-password",
+    data
+  );
+  return response.data;
+};
+
+export const updateLocation = async (data: updateLocationType) => {
+  const response = await api.patch<ApiResponse<any>>(
+    "/api/auth/update-location",
     data
   );
   return response.data;

@@ -2,7 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import React, { memo } from "react";
 import { ArrowLeft } from "lucide-react-native";
 import type { MonthlyOverviewProps } from "@/types/attendance";
-
+import { parseDate } from "@/constants/days";
 const MonthlyOverview = ({ monthData = [] }: MonthlyOverviewProps) => {
   const DAYS_IN_MONTH = 31;
   const START_OFFSET = 4; // Adjust based on actual month
@@ -15,7 +15,7 @@ const MonthlyOverview = ({ monthData = [] }: MonthlyOverviewProps) => {
 
   const getStatus = (day: number) => {
     if (!monthData.length) return null;
-    const record = monthData.find((r) => new Date(r.date).getDate() === day);
+    const record = monthData.find((r) => parseDate(r.date).getDate() === day);
     return record?.status || null;
   };
 

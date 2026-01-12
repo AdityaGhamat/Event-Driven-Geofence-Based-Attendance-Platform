@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
 const BASE_URL = "https://2381f3699175.ngrok-free.app";
+
 export const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
@@ -37,7 +38,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log("🟣 API RESPONSE", response.config.url);
+    // console.log("🟣 API RESPONSE", response.config.url); // Optional: Uncomment for noise
     return response;
   },
 
@@ -48,15 +49,19 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // 1. Avoid infinite loops: Don't refresh if the failed call was ALREADY a login/refresh attempt
     if (
       originalRequest.url?.includes("/auth/login") ||
       originalRequest.url?.includes("/auth/refresh")
     ) {
-      console.log("🔴 API ERROR", error.config?.url, error.response?.status);
+      console.log("🔴 Auth Endpoint Failed:", error.config?.url);
       return Promise.reject(error);
     }
 
+    // 2. Handle 401 Unauthorized
     if (error.response.status === 401 && !originalRequest._retry) {
+      console.log("🔄 Token Expired. Queueing Refresh...");
+
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((newToken) => {
@@ -71,27 +76,49 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-        if (!refreshToken) throw new Error("No refresh token");
+        if (!refreshToken) {
+          console.error("❌ No Refresh Token found locally.");
+          throw new Error("No refresh token");
+        }
 
+        console.log("🚀 Calling Refresh API...");
         const response = await axios.get(`${BASE_URL}/api/auth/refresh`, {
-          params: {
-            token: refreshToken,
-          },
+          params: { token: refreshToken },
         });
 
-        const { authorization, refresh } = response.data;
+        // ⚠️ CRITICAL FIX: Safe Data Extraction
+        // This checks both "response.data.authorization" AND "response.data.data.authorization"
+        const newAccessToken =
+          response.data?.authorization ||
+          response.data?.data?.authorization ||
+          response.data?.accessToken;
+        const newRefreshToken =
+          response.data?.refresh ||
+          response.data?.data?.refresh ||
+          response.data?.refreshToken;
 
-        await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, authorization);
-        if (refresh) {
-          await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refresh);
+        if (!newAccessToken) {
+          console.error(
+            "❌ Refresh API succeeded but returned NO token. Response:",
+            response.data
+          );
+          throw new Error("Invalid Refresh Response");
+        }
+
+        console.log("✅ Token Refreshed Successfully!");
+
+        await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, newAccessToken);
+        if (newRefreshToken) {
+          await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newRefreshToken);
         }
 
         isRefreshing = false;
-        onRefreshed(authorization);
+        onRefreshed(newAccessToken);
 
-        originalRequest.headers.Authorization = `Bearer ${authorization}`;
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (err) {
+        console.error("💀 Refresh Cycle Failed. Logging user out.", err);
         isRefreshing = false;
         refreshSubscribers = [];
 

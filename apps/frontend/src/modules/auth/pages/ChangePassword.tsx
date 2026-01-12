@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { updatePassword } from "../../auth/api";
 import { notify } from "../../../components/Toast";
+import { updatePasswordSchema } from "../validations/index";
 
 const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     old_password: "",
@@ -24,12 +26,21 @@ const ChangePassword = () => {
       notify.error("Validation Error", "New passwords do not match.");
       return;
     }
+    const { new_password, old_password } = formData;
 
-    if (formData.new_password.length < 6) {
-      notify.error(
-        "Validation Error",
-        "Password must be at least 6 characters."
-      );
+    const result = updatePasswordSchema.safeParse({
+      old_password,
+      new_password,
+    });
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0];
+        if (typeof field === "string") {
+          fieldErrors[field] = issue.message;
+        }
+      });
+      setError(fieldErrors);
       return;
     }
 
@@ -49,6 +60,7 @@ const ChangePassword = () => {
           new_password: "",
           confirm_password: "",
         });
+        setError({});
       } else {
         notify.error(
           "Failed",
@@ -104,6 +116,11 @@ const ChangePassword = () => {
                 )}
               </button>
             </div>
+            {error.old_password && (
+              <p className="text-red-400 text-sm mt-1 ml-1">
+                {error.old_password}
+              </p>
+            )}
           </div>
 
           <div className="h-px bg-white/10" />
@@ -123,6 +140,11 @@ const ChangePassword = () => {
                 required
               />
             </div>
+            {error.new_password && (
+              <p className="text-red-400 text-sm mt-1 ml-1">
+                {error.new_password}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

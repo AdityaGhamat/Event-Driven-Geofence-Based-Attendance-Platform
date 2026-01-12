@@ -4,13 +4,19 @@ import TodayAttendance from "../components/TodayAttendance";
 import WeeklyPerformance from "../components/WeeklyPerformance";
 import MonthlyOverview from "../components/MonthlyOverview";
 import AttendanceSummary from "../components/AttendanceSummary";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { IAnalyticsResponse, IAttedanceProps } from "../types";
 import { getAnalytics } from "../api";
 import Loading from "../../../components/Loading";
+import { useAuth } from "../../auth/hooks/useAuth";
 
 const Attendance = ({ employee_id, self = true }: IAttedanceProps) => {
-  const slots = generateSlots();
+  const { user } = useAuth();
+  const startTime = user?.office?.workStartTime as string;
+  const endTime = user?.office?.workEndTime as string;
+  const slots = useMemo(() => {
+    return generateSlots(startTime as string, endTime as string);
+  }, []);
   const [data, setData] = useState<IAnalyticsResponse | null>(null);
 
   const [loading, setLoading] = useState(true);

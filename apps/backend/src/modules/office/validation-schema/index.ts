@@ -8,7 +8,7 @@ export const createOfficeSchema = z.object({
     .min(5, "Minimum 5 Characters Required")
     .max(100, "Maximum 100 Characters Are Permitted"),
   workingDays: z
-    .array(z.number().int().min(1).max(6))
+    .array(z.number().int().min(1).max(7))
     .min(1)
     .max(7)
     .refine((days) => new Set(days).size === days.length, {
@@ -42,19 +42,14 @@ export const updateWorkingDaysSchema = z.object({
     ),
 });
 
-export const updateWorkingTimeSchema = z
-  .object({
-    workStartTime: z
-      .string()
-      .regex(timeRegex, "Invalid format.Use HH:MM (e.g., 09:00 or 17:30)"),
-    workEndTime: z
-      .string()
-      .regex(timeRegex, "Invalid format.Use HH:MM (e.g., 09:00 or 17:30)"),
-  })
-  .refine((data) => data.workStartTime < data.workEndTime, {
-    message: "Start time must be earlier than end time",
-    path: ["workStartTime"],
-  });
+export const updateWorkingTimeSchema = z.object({
+  workStartTime: z
+    .string()
+    .regex(timeRegex, "Invalid format.Use HH:MM (e.g., 09:00 or 17:30)"),
+  workEndTime: z
+    .string()
+    .regex(timeRegex, "Invalid format.Use HH:MM (e.g., 09:00 or 17:30)"),
+});
 
 export const changeActiveStatusSchema = z.object({
   isActive: z.boolean(),

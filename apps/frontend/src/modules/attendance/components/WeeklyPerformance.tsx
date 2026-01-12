@@ -11,6 +11,14 @@ import {
 import { BarChart3 } from "lucide-react";
 import type { WeeklyPerformanceProps } from "../types";
 
+const parseDate = (dateStr: string) => {
+  if (!dateStr || dateStr.length !== 8) return new Date();
+  const y = parseInt(dateStr.substring(0, 4));
+  const m = parseInt(dateStr.substring(4, 6)) - 1;
+  const d = parseInt(dateStr.substring(6, 8));
+  return new Date(y, m, d);
+};
+
 const WeeklyPerformance = ({ data, average }: WeeklyPerformanceProps) => {
   const processChartData = () => {
     const daysTemplate = [
@@ -24,9 +32,10 @@ const WeeklyPerformance = ({ data, average }: WeeklyPerformanceProps) => {
     ];
 
     return daysTemplate.map((template) => {
-      const record = data.find(
-        (r) => new Date(r.date).getDay() === template.jsDay
-      );
+      const record = data.find((r) => {
+        const dateObj = parseDate(r.date);
+        return dateObj.getDay() === template.jsDay;
+      });
 
       return {
         day: template.label,

@@ -2,13 +2,14 @@ import { View, Text } from "react-native";
 import React, { memo } from "react";
 import { BarChart3 } from "lucide-react-native";
 import type { WeeklyPerformanceProps } from "@/types/attendance";
+import { parseDate } from "@/constants/days";
 
 const WeeklyPerformance = ({ data, average }: WeeklyPerformanceProps) => {
   const daysTemplate = ["M", "T", "W", "T", "F", "S", "S"];
   const jsDays = [1, 2, 3, 4, 5, 6, 0];
 
   const chartData = jsDays.map((dayNum, index) => {
-    const record = data.find((r) => new Date(r.date).getDay() === dayNum);
+    const record = data.find((r) => parseDate(r.date).getDay() === dayNum);
     const hours = record?.workingMinutes ? record.workingMinutes / 60 : 0;
     return {
       label: daysTemplate[index],

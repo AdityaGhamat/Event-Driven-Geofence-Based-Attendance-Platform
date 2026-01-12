@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { markAttendanceJob } from "./jobs/attendanceslot.job";
 import { getTodayDate } from "./utilities";
 import DailyAttendanceModel from "./document/dailyattendance.document";
+import AttendanceModel from "./document/attendanceslot.document";
 class AttendanceController {
   public async manualMarkAttendance(req: Request, res: Response) {
     try {
@@ -166,7 +167,24 @@ class AttendanceController {
   }
 
   //authmiddleware
-  public async userDashboard(req: Request, res: Response) {
+  private calculateTodayStats(rawSlots: any[]) {
+    const presentSlots = rawSlots.filter((s) => s.status === "IN");
+    const activeSlots = presentSlots.map((s) => s.slotTime); // e.g., ["09:00", "09:15"]
+    const workingMinutes = presentSlots.length * 15;
+
+    // Simple logic for live status
+    let status = "ABSENT";
+    if (workingMinutes > 0) status = "PRESENT";
+
+    return {
+      workingMinutes,
+      status,
+      activeSlots,
+      date: getTodayDate(),
+    };
+  }
+
+  public userDashboard = async (req: Request, res: Response) => {
     try {
       let userId;
       const uid = req.query.uid as string;
@@ -175,79 +193,79 @@ class AttendanceController {
       } else {
         userId = new Types.ObjectId(req.user.user_id);
       }
+
       const todayDateStr = getTodayDate();
       const now = new Date();
+
       const dayOfWeek = now.getDay();
       const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const weekStart = new Date(now);
       weekStart.setDate(now.getDate() - mondayOffset);
       const weekStartStr = getTodayDate(weekStart);
-
       const monthStartStr = `${now.getFullYear()}-${(now.getMonth() + 1)
         .toString()
         .padStart(2, "0")}-01`;
 
-      const stats = await DailyAttendanceModel.aggregate([
-        {
-          $match: {
-            user: userId,
-            date: { $gte: monthStartStr },
-          },
-        },
-        {
-          $facet: {
-            today: [
-              { $match: { date: todayDateStr } },
-
-              {
-                $project: {
-                  _id: 0,
-                  workingMinutes: 1,
-                  status: 1,
-                  date: 1,
-                  events: 1,
-                },
+      const [historyStats, todayRawSlots] = await Promise.all([
+        DailyAttendanceModel.aggregate([
+          {
+            $match: {
+              user: userId,
+              date: {
+                $gte: monthStartStr,
+                $ne: todayDateStr,
               },
-            ],
-
-            monthDaily: [
-              { $project: { _id: 0, date: 1, status: 1, workingMinutes: 1 } },
-            ],
-
-            weekStats: [
-              { $match: { date: { $gte: weekStartStr } } },
-              { $sort: { date: 1 } },
-              { $project: { _id: 0, date: 1, workingMinutes: 1, status: 1 } },
-            ],
+            },
           },
-        },
+          {
+            $facet: {
+              monthDaily: [
+                { $project: { _id: 0, date: 1, status: 1, workingMinutes: 1 } },
+              ],
+              weekStats: [
+                { $match: { date: { $gte: weekStartStr } } },
+                { $sort: { date: 1 } },
+                { $project: { _id: 0, date: 1, workingMinutes: 1, status: 1 } },
+              ],
+            },
+          },
+        ]),
+
+        AttendanceModel.find({
+          user: userId,
+          date: todayDateStr,
+        }).lean(),
       ]);
 
-      const data = stats[0];
-      const todayDoc = data.today[0] || null;
+      const data = historyStats[0];
       const weekData = data.weekStats || [];
       const monthData = data.monthDaily || [];
 
-      let todayActiveSlots: string[] = [];
-      if (todayDoc && todayDoc.events) {
-        todayActiveSlots = this.calculateActiveSlots(todayDoc.events);
+      const todayData = this.calculateTodayStats(todayRawSlots);
 
-        delete todayDoc.events;
+      if (todayData.workingMinutes > 0) {
+        weekData.push({
+          date: todayDateStr,
+          workingMinutes: todayData.workingMinutes,
+          status: todayData.status,
+        });
+        monthData.push({
+          date: todayDateStr,
+          workingMinutes: todayData.workingMinutes,
+          status: todayData.status,
+        });
       }
 
       const totalMonthDays = monthData.length;
       const presentMonthDays = monthData.filter(
-        (d: any) => d.status === "PRESENT"
+        (d: any) => d.status === "PRESENT" || d.status === "HALF_PRESENT"
       ).length;
       const absentMonthDays = monthData.filter(
         (d: any) => d.status === "ABSENT"
       ).length;
 
       const resObject = {
-        today: {
-          ...todayDoc,
-          activeSlots: todayActiveSlots,
-        },
+        today: todayData,
         week: {
           daily: weekData,
           averageDailyMinutes:
@@ -277,15 +295,15 @@ class AttendanceController {
       return res.status(200).json({
         success: true,
         data: resObject,
-        message: "Analytics fetched successfully",
+        message: "Dashboard analytics fetched successfully",
         error: {},
       });
     } catch (error) {
-      console.error("Analytics Error:", error);
+      console.error("Dashboard Error:", error);
       return res
         .status(500)
         .json({ success: false, message: "Internal server error" });
     }
-  }
+  };
 }
 export default new AttendanceController();

@@ -18,6 +18,13 @@ export const daysFirstAlphabet = {
   7: "S",
 } as const;
 
+export const parseDate = (str: any) => {
+  const y = str.substring(0, 4);
+  const m = str.substring(4, 6);
+  const d = str.substring(6, 8);
+  return new Date(`${y}-${m}-${d}`);
+};
+
 export type DayNumber = keyof typeof days;
 
 export type DayNumberFirstAlphabet = keyof typeof daysFirstAlphabet;

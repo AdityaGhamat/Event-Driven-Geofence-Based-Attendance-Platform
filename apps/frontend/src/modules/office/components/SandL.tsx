@@ -78,7 +78,7 @@ const SandL = () => {
             </span>
           </div>
         </div>
-        {/* Box 2: Location */}
+        {/* Box 2: location */}
         <div className="border border-purple-500/30 p-5 space-y-3 rounded-xl my-3 bg-[#3c354d]">
           <div className="flex justify-between items-center">
             <span className="flex gap-x-3">

@@ -15,8 +15,9 @@ import { createSessionCookie, decodeCookie } from "./utils";
 
 class AuthController {
   public async CreateUser(req: Request, res: Response) {
+    console.log(req.body);
     const userBody = createUserSchema.safeParse(req.body);
-    console.log(userBody);
+
     if (!userBody.success) {
       return sendZodError(res, userBody.error);
     }
@@ -83,7 +84,7 @@ class AuthController {
   }
   public async SignIn(req: Request, res: Response) {
     const userBody = loginSchema.safeParse(req.body);
-    console.log(userBody);
+
     if (!userBody.success) {
       return sendZodError(res, userBody.error);
     }

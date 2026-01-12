@@ -8,7 +8,7 @@ function toMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 }
-async function processOfficeAttendance(office: any) {
+export async function processOfficeAttendance(office: any) {
   const users = await UserModel.find({
     office: office._id,
   }).lean();
