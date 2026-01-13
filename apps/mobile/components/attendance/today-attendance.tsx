@@ -12,12 +12,45 @@ const TodayAttendance = ({ slots, stats }: TodayAttendanceProps) => {
   const totalSlots = 32;
   const presentSlots = Math.floor(workingMinutes / 15);
 
-  const dateStr = stats?.date
-    ? new Date(stats.date).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-      })
-    : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  const getDisplayDate = (dateString?: string) => {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const formatFromDate = (d: Date) => {
+      return `${monthNames[d.getMonth()]} ${d.getDate()}`;
+    };
+
+    if (!dateString) {
+      return formatFromDate(new Date());
+    }
+
+    const match = dateString.match(/(\d{4})-(\d{2})-(\d{2})/);
+
+    if (match) {
+      const monthIndex = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+
+      if (monthNames[monthIndex]) {
+        return `${monthNames[monthIndex]} ${day}`;
+      }
+    }
+
+    return formatFromDate(new Date());
+  };
+
+  const dateStr = getDisplayDate(stats?.date);
 
   const getStatusColor = (s: string) => {
     if (s === "PRESENT")

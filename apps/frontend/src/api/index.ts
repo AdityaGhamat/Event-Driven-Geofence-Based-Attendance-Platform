@@ -7,7 +7,7 @@ import {
 import type { ApiResponse } from "../types";
 
 export const api = axios.create({
-  baseURL: `https://event-driven-geofence-based-attendance.onrender.com`,
+  baseURL: `http://localhost:3000`,
   withCredentials: true,
 });
 
