@@ -1,135 +1,192 @@
-# Turborepo starter
+# Event-Driven Geofence-Based Attendance Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+A scalable, event-driven attendance management system that automatically tracks employee presence using geofencing and real-time location updates.  
+The platform is designed to work without manual punch-in/punch-out and supports distributed processing for high reliability and scalability.
 
-## Using this example
+---
 
-Run the following command:
+## Overview
 
-```sh
-npx create-turbo@latest
+This project implements an **event-driven architecture** where location updates and attendance calculations are handled asynchronously using queues.  
+It supports multiple clients while ensuring accurate attendance tracking based on geographical boundaries and working hours.
+
+The system is suitable for organizations that require:
+
+- Automated attendance tracking
+- Location-based validation
+- High scalability and fault tolerance
+- Clean separation of concerns
+
+---
+
+## System Architecture
+
+![System Architecture](docs/architecture.png)
+
+### Components
+
+- **Admin Panel (React)**  
+  Used by administrators to manage offices, employees, attendance rules, and reports.
+
+- **Mobile App (React Native)**  
+  Runs on employee devices and periodically sends location updates to the backend.
+
+- **Node.js API (Express)**  
+  Central orchestration layer that validates requests, emits events, handles business logic, and communicates with the database.
+
+- **Redis (Queue / Cache)**  
+  Acts as an event bus for decoupled processing of location updates, attendance jobs, and aggregation tasks.
+
+- **Geofencing Engine**  
+  Uses the Haversine formula to calculate distances between user location and office geofence.
+
+- **MongoDb Database**  
+  Stores users, offices, attendance slots, daily summaries, and historical analytics.
+
+---
+
+## Monorepo Structure
+
+```txt
+.
+├── apps
+│   ├── backend        # Node.js + Express API
+│   ├── frontend       # React Admin Panel
+│   └── mobile         # React Native (Expo) Mobile App
+│
+├── packages           # Shared types and utilities
+│
+├── docs
+│   └── architecture.png
+│
+├── compose.yaml       # Docker Compose setup
+├── turbo.json         # Turborepo configuration
+├── package.json
+└── README.md
 ```
 
-## What's inside?
+Event-Driven Attendance Flow
 
-This Turborepo includes the following packages/apps:
+Mobile application sends periodic location updates.
 
-### Apps and Packages
+Backend validates the request and publishes a location event to Redis.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Background workers consume the event and:
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+Validate geofence constraints
 
-### Utilities
+Update attendance slots
 
-This Turborepo has some additional tools already setup for you:
+Office-level workers detect office close events.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Aggregation jobs compute:
 
-### Build
+Total working hours
 
-To build all apps and packages, run the following command:
+Daily attendance status
 
-```
-cd my-turborepo
+Weekly and monthly summaries
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+Results are stored in PostgreSQL and exposed to the Admin Panel.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+Geofencing Logic
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Distance calculation is done using the Haversine formula
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+Attendance is marked only if:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+User is within the allowed geofence radius
 
-### Develop
+Time falls within office working hours
 
-To develop all apps and packages, run the following command:
+Slot-based tracking ensures accurate working-hour calculation
 
-```
-cd my-turborepo
+Technology Stack
+Backend
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+Node.js
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+Express
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+TypeScript
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+Redis
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+MongoDb
 
-### Remote Caching
+Docker
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+Frontend
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+React
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+TypeScript
 
-```
-cd my-turborepo
+Vite
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+Mobile
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+React Native
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Expo
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Background location tracking
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+Infrastructure
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+Turborepo
 
-## Useful Links
+Docker Compose
 
-Learn more about the power of Turborepo:
+Event-driven background workers
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Local Development
+
+# Install dependencies
+
+npm install
+
+# Start all services
+
+docker compose up
+
+# Backend
+
+cd apps/backend
+npm run dev
+
+# Frontend
+
+cd apps/frontend
+npm run dev
+
+# Mobile
+
+cd apps/mobile
+npx expo start
+
+Key Design Decisions
+
+Event-driven processing instead of synchronous cron-based logic
+
+Redis queues for horizontal scalability
+
+Slot-based attendance tracking for accuracy
+
+Separation of concerns between API, workers, and clients
+
+Monorepo architecture for shared types and consistency
+
+Use Cases
+
+Enterprise attendance systems
+
+Location-restricted workforce management
+
+Distributed employee monitoring
+
+Real-time analytics and reporting
+
+License
+
+MIT License
