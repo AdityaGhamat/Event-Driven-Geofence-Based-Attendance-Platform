@@ -12,10 +12,10 @@ It supports multiple clients while ensuring accurate attendance tracking based o
 
 The system is suitable for organizations that require:
 
-- Automated attendance tracking
-- Location-based validation
-- High scalability and fault tolerance
-- Clean separation of concerns
+- Automated attendance tracking  
+- Location-based validation  
+- High scalability and fault tolerance  
+- Clean separation of concerns  
 
 ---
 
@@ -23,7 +23,7 @@ The system is suitable for organizations that require:
 
 ![System Architecture](docs/architecture.png)
 
-### Components
+### Core Components
 
 - **Admin Panel (React)**  
   Used by administrators to manage offices, employees, attendance rules, and reports.
@@ -40,7 +40,7 @@ The system is suitable for organizations that require:
 - **Geofencing Engine**  
   Uses the Haversine formula to calculate distances between user location and office geofence.
 
-- **MongoDb Database**  
+- **MongoDB Database**  
   Stores users, offices, attendance slots, daily summaries, and historical analytics.
 
 ---
@@ -63,10 +63,7 @@ The system is suitable for organizations that require:
 ├── turbo.json         # Turborepo configuration
 ├── package.json
 └── README.md
-```
-
 Event-Driven Attendance Flow
-
 Mobile application sends periodic location updates.
 
 Backend validates the request and publishes a location event to Redis.
@@ -87,11 +84,10 @@ Daily attendance status
 
 Weekly and monthly summaries
 
-Results are stored in PostgreSQL and exposed to the Admin Panel.
+Results are stored in the database and exposed to the Admin Panel.
 
 Geofencing Logic
-
-Distance calculation is done using the Haversine formula
+Distance calculation is performed using the Haversine formula
 
 Attendance is marked only if:
 
@@ -103,7 +99,6 @@ Slot-based tracking ensures accurate working-hour calculation
 
 Technology Stack
 Backend
-
 Node.js
 
 Express
@@ -112,12 +107,11 @@ TypeScript
 
 Redis
 
-MongoDb
+MongoDB
 
 Docker
 
 Frontend
-
 React
 
 TypeScript
@@ -125,7 +119,6 @@ TypeScript
 Vite
 
 Mobile
-
 React Native
 
 Expo
@@ -133,7 +126,6 @@ Expo
 Background location tracking
 
 Infrastructure
-
 Turborepo
 
 Docker Compose
@@ -141,32 +133,26 @@ Docker Compose
 Event-driven background workers
 
 Local Development
-
+bash
+Copy code
 # Install dependencies
-
 npm install
 
 # Start all services
-
 docker compose up
 
 # Backend
-
 cd apps/backend
 npm run dev
 
 # Frontend
-
 cd apps/frontend
 npm run dev
 
 # Mobile
-
 cd apps/mobile
 npx expo start
-
 Key Design Decisions
-
 Event-driven processing instead of synchronous cron-based logic
 
 Redis queues for horizontal scalability
@@ -178,7 +164,6 @@ Separation of concerns between API, workers, and clients
 Monorepo architecture for shared types and consistency
 
 Use Cases
-
 Enterprise attendance systems
 
 Location-restricted workforce management
@@ -186,7 +171,3 @@ Location-restricted workforce management
 Distributed employee monitoring
 
 Real-time analytics and reporting
-
-License
-
-MIT License
