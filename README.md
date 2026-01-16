@@ -45,17 +45,17 @@ The system eliminates manual "punch-in" actions, relying instead on background l
 
 ### Mobile App (Employee View)
 
-|                              Dashboard (Top)                              |                              Dashboard (Scrolled)                              |                       Attendance History                       |                        Profile/Settings                         |
-| :-----------------------------------------------------------------------: | :----------------------------------------------------------------------------: | :------------------------------------------------------------: | :-------------------------------------------------------------: |
-| <img src="docs/mobile-dash-1.png" width="200" alt="Mobile Dashboard Top"> | <img src="docs/mobile-dash-2.png" width="200" alt="Mobile Dashboard Scrolled"> | <img src="docs/mobile-3.png" width="200" alt="Mobile History"> | <img src="docs/mobile-4.png" width="200" alt="Mobile Settings"> |
+|                              Dashboard (Top)                              |                              Dashboard (Scrolled)                              |                         Office Overview                         |                        Profile/Settings                         |
+| :-----------------------------------------------------------------------: | :----------------------------------------------------------------------------: | :-------------------------------------------------------------: | :-------------------------------------------------------------: |
+| <img src="docs/mobile-dash-1.png" width="200" alt="Mobile Dashboard Top"> | <img src="docs/mobile-dash-2.png" width="200" alt="Mobile Dashboard Scrolled"> | <img src="docs/mobile-3.png" width="200" alt="Office Overview"> | <img src="docs/mobile-4.png" width="200" alt="Mobile Settings"> |
 
 <br>
 
 ### Admin Dashboard (Web View)
 
-|                     Main Dashboard Overview                      |                        Employee Management                        |                    Reports & Analytics                    |
-| :--------------------------------------------------------------: | :---------------------------------------------------------------: | :-------------------------------------------------------: |
-| <img src="docs/web-1.png" width="100%" alt="Web Dashboard Main"> | <img src="docs/web-2.png" width="100%" alt="Web Employee Manage"> | <img src="docs/web-3.png" width="100%" alt="Web Reports"> |
+|                        Office Creation                        |                        Employee Management                        |                        Edit Office                        |
+| :-----------------------------------------------------------: | :---------------------------------------------------------------: | :-------------------------------------------------------: |
+| <img src="docs/web-1.png" width="100%" alt="Office Creation"> | <img src="docs/web-2.png" width="100%" alt="Web Employee Manage"> | <img src="docs/web-3.png" width="100%" alt="Edit Office"> |
 
 </details>
 
@@ -116,9 +116,8 @@ This project uses a Monorepo structure to manage shared dependencies and configu
 │
 ├── compose.yaml         # Container orchestration
 └── turbo.json           # Build pipeline configuration
-```
 
-````
+```
 
 ---
 
@@ -186,9 +185,8 @@ cd apps/mobile && npx expo start
 
 - [LinkedIn](https://www.linkedin.com/in/aditya-ghamat-14b558292/)
 - [GitHub](https://github.com/AdityaGhamat)
-- [Resume](https://drive.google.com/file/d/1atL-y0_pE2BBAPPA8jxkmP982FG9sWx0/view%3Fusp%3Dsharing)
+- [Resume](https://drive.google.com/file/d/1atL-y0_pE2BBAPPA8jxkmP982FG9sWx0/view?usp=sharing)
 
 ```
 
 ```
-````
