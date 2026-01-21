@@ -23,6 +23,19 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden font-sans selection:bg-purple-500/30">
+      <title>Attendify - Modern Geofence Attendance System</title>
+      <meta
+        name="description"
+        content="Stop time theft with GPS-based attendance tracking. Real-time analytics, geofencing for distributed teams."
+      />
+      <meta
+        property="og:title"
+        content="Attendify - The Modern Standard for Workforce Attendance"
+      />
+      <meta
+        property="og:image"
+        content="https://your-vercel-domain.app/preview-image.png"
+      />
       <nav className="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight">

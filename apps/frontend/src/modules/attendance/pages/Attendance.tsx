@@ -52,6 +52,17 @@ const Attendance = ({ employee_id, self = true }: IAttedanceProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <title>Attendance | Attendify</title>
+      <meta
+        name="description"
+        content="Attendance of your Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="Attendance | Attendify" />
+      <meta
+        property="og:description"
+        content="Attendance for Attendify workforce management."
+      />
       <AttendanceCard>
         <TodayAttendance stats={data?.today} slots={slots} />
       </AttendanceCard>

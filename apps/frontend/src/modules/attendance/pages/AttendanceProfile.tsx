@@ -59,6 +59,17 @@ const AttendanceProfile = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto min-h-screen">
+      <title>Dashboard | Attendify</title>
+      <meta
+        name="description"
+        content="Dashboard of your Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="Dashboard | Attendify" />
+      <meta
+        property="og:description"
+        content="Dashboard for Attendify workforce management."
+      />
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={() => navigate(-1)}

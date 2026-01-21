@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router"; // or "react-router-dom" depending on your version
 import { loginSchema } from "../validations";
 import AuthLayout from "../layouts/AuthLayout";
 import { login } from "../api";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router";
 import { notify } from "../../../components/Toast";
-
 import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
@@ -47,6 +46,18 @@ const Login = () => {
 
   return (
     <AuthLayout>
+      <title>Login | Attendify</title>
+      <meta
+        name="description"
+        content="Log in to your Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="Login | Attendify" />
+      <meta
+        property="og:description"
+        content="Secure login for Attendify workforce management."
+      />
+
       <form
         className="flex flex-col justify-center items-center w-full max-w-lg md:w-1/2 px-6 flex-1"
         onSubmit={handleSubmit}

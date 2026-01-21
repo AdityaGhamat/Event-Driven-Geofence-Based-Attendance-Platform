@@ -14,6 +14,17 @@ const OfficeSettings = () => {
   const [latitude, longitude] = coordinates;
   return (
     <div className="space-y-5">
+      <title>OfficeSettings | Attendify</title>
+      <meta
+        name="description"
+        content="OfficeSettings of your Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="OfficeSettings | Attendify" />
+      <meta
+        property="og:description"
+        content="OfficeSettings for Attendify workforce management."
+      />
       <div>
         <LandT latitude={latitude} longitude={longitude} />
       </div>

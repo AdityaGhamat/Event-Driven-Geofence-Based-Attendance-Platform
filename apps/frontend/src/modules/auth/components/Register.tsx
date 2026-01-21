@@ -54,6 +54,17 @@ const Register = () => {
 
   return (
     <AuthLayout>
+      <title>Register | Attendify</title>
+      <meta
+        name="description"
+        content="Register to your Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="Register | Attendify" />
+      <meta
+        property="og:description"
+        content="Secure Register for Attendify workforce management."
+      />
       <form
         className="flex flex-col justify-center items-center w-full max-w-lg md:w-1/2 px-6 flex-1"
         onSubmit={handleSubmit}

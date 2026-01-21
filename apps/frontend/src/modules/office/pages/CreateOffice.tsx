@@ -74,6 +74,17 @@ const CreateOffice = () => {
 
   return (
     <div className="p-10 flex flex-col justify-center min-h-screen w-full items-center border-white/10">
+      <title>Create Office | Attendify</title>
+      <meta
+        name="description"
+        content="Create office of your Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="Create Office | Attendify" />
+      <meta
+        property="og:description"
+        content="Create office for Attendify workforce management."
+      />
       <form className="space-y-6 w-full max-w-2xl bg-[#3c354d] p-8 rounded-2xl border border-purple-500/20 shadow-xl">
         <div className="flex flex-col gap-2">
           <label htmlFor="name" className="text-sm text-white">

@@ -76,6 +76,17 @@ const ChangePassword = () => {
 
   return (
     <div className="flex justify-center items-center min-h-[80vh] px-4">
+      <title>Change Password | Attendify</title>
+      <meta
+        name="description"
+        content="Change password of Attendify account to manage workforce attendance and geofence settings."
+        key="desc"
+      />
+      <meta property="og:title" content="Change Password | Attendify" />
+      <meta
+        property="og:description"
+        content="Change Password for Attendify workforce management."
+      />
       <div className="w-full max-w-md bg-[#3c354d] border border-purple-500/30 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         <div className="bg-[#2a253b] p-6 border-b border-white/5 flex items-center gap-4">
           <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400">
