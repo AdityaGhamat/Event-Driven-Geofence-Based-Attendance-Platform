@@ -80,13 +80,18 @@ class Server {
   }
 
   public async start(port: number) {
-    await connectDb();
-
-    scheduleWorker.run();
-    aggregationWorker.run();
-    await initSchedule();
-
-    this.app.listen(port, "0.0.0.0");
+    this.app.listen(port, "0.0.0.0", () => {
+      console.log(`Server started on 0.0.0.0:${port}`);
+    });
+    try {
+      await connectDb();
+      scheduleWorker.run();
+      aggregationWorker.run();
+      await initSchedule();
+    } catch (error) {
+      console.error("❌ Database failed to connect:", error);
+      process.exit(1);
+    }
   }
 }
 
