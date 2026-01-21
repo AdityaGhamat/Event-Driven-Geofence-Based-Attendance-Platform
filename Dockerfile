@@ -55,4 +55,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["node", "apps/backend/dist/index.js"]
+CMD ["node", "apps/backend/dist/app.js"]
