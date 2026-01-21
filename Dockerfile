@@ -1,39 +1,31 @@
-# 1. Base Image
 FROM node:20-alpine AS base
 
-# 2. Builder Stage (Builds Frontend & Backend)
+# 2. Builder Stage
 FROM base AS builder
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# --- FIX: Add build tools for native dependencies (bcrypt, sharp, etc.) ---
+RUN apk add --no-cache libc6-compat python3 make g++ 
 WORKDIR /app
 
-# Enable Corepack (if you use pnpm or yarn, otherwise npm is fine)
+# Enable Corepack
 RUN corepack enable
 
 # --- COPY PHASE ---
-# We copy the root configs
 COPY package.json package-lock.json* turbo.json ./
 
-# We copy the package.json for all workspaces so npm install works
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/frontend/package.json ./apps/frontend/package.json
-# We copy mobile package.json just to satisfy workspace definitions, but we won't build it
 COPY apps/mobile/package.json ./apps/mobile/package.json
 COPY packages ./packages
 
-# Install ALL dependencies (including dev deps needed for building)
+# Install dependencies (This should pass now)
 RUN npm install
 
-# Copy the full source code for backend and frontend
+# Copy source code
 COPY apps/backend ./apps/backend
 COPY apps/frontend ./apps/frontend
 # Note: We deliberately DO NOT copy apps/mobile source code
 
-# --- BUILD PHASE ---
-# Use Turbo to build only the backend and frontend
-# This generates:
-# - apps/backend/dist
-# - apps/frontend/dist
+# Build
 RUN npx turbo run build --filter=backend --filter=frontend
 
 # 3. Runner Stage (The final tiny image)
