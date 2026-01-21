@@ -1,55 +1,63 @@
+import express, { Express, Request, Response } from "express";
 import cookieParser from "cookie-parser";
-import express from "express";
-import { Express } from "express";
-import type { Request, Response } from "express";
 import dotenv from "dotenv";
+import cors from "cors";
+import path from "path";
+
 import apiRoutes from "./routes";
 import { errorMiddleware } from "./modules/core/middlewares/errormiddleware";
 import { connectDb } from "./modules/core/utils/connectdb";
-import cors from "cors";
 
 import { initSchedule } from "./modules/attendance/cron/schedule";
 import { scheduleWorker } from "./modules/attendance/worker/attendance.worker";
 import { aggregationWorker } from "./modules/attendance/worker/aggregation.worker";
 
-//cron jobs
-
 class Server {
-  app: Express;
+  public app: Express;
+
   constructor() {
     this.app = express();
+    dotenv.config();
+
     this.middleware();
     this.routes();
-    this.errorMiddleware();
+    this.errorHandler();
   }
+
   private middleware() {
-    dotenv.config();
+    const port = process.env.PORT || 3000;
     const allowedOrigins = [
       "http://localhost:5173",
+      `http://localhost:${port}`,
       "https://event-driven-geofence-based-attenda.vercel.app",
+      "https://event-driven-geofence-based-attendance.onrender.com",
       "https://amazing-strudel-fbd896.netlify.app",
     ].filter(Boolean);
+
     this.app.use(
       cors({
         origin: (origin, callback) => {
           if (!origin) return callback(null, true);
           if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-          } else {
-            console.log("Blocked by CORS:", origin);
-            callback(new Error("Not allowed by CORS"));
+            return callback(null, true);
           }
+          callback(new Error("Not allowed by CORS"));
         },
         credentials: true,
       })
     );
+
     this.app.use(cookieParser());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+
+    const frontendDistPath = path.resolve(__dirname, "../../frontend/dist");
+
+    this.app.use(express.static(frontendDistPath));
   }
 
   private routes() {
-    this.app.get("/", (req: Request, res: Response) => {
+    this.app.get("/api/health", (_req: Request, res: Response) => {
       res.status(200).json({
         status: "success",
         message: "Geofence Attendance System API is operational",
@@ -58,18 +66,25 @@ class Server {
         uptime: `${process.uptime().toFixed(2)}s`,
       });
     });
+
     this.app.use("/api", apiRoutes);
+
+    this.app.use((req: Request, res: Response) => {
+      res.sendFile(path.resolve(__dirname, "../../frontend/dist/index.html"));
+    });
   }
 
-  private errorMiddleware() {
+  private errorHandler() {
     this.app.use(errorMiddleware);
   }
 
   public async start(port: number) {
     await connectDb();
+
     scheduleWorker.run();
     aggregationWorker.run();
     await initSchedule();
+
     this.app.listen(port, "0.0.0.0");
   }
 }
