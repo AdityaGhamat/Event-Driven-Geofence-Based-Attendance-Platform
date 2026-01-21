@@ -1,9 +1,11 @@
-FROM node:20-alpine AS base
+# 1. Base Image: Use "slim" (Debian) instead of "alpine" for better compatibility
+FROM node:20-slim AS base
 
 # 2. Builder Stage
 FROM base AS builder
-# --- FIX: Add build tools for native dependencies (bcrypt, sharp, etc.) ---
-RUN apk add --no-cache libc6-compat python3 make g++ 
+# Install build tools using apt-get (Debian) instead of apk (Alpine)
+# openssl is often needed for database clients like Prisma
+RUN apt-get update && apt-get install -y openssl python3 make g++ gcc
 WORKDIR /app
 
 # Enable Corepack
@@ -17,8 +19,9 @@ COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY apps/mobile/package.json ./apps/mobile/package.json
 COPY packages ./packages
 
-# Install dependencies (This should pass now)
-RUN npm install
+# Install dependencies
+# Added --legacy-peer-deps to prevent crashes if React Native versions conflict
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY apps/backend ./apps/backend
@@ -28,11 +31,11 @@ COPY apps/frontend ./apps/frontend
 # Build
 RUN npx turbo run build --filter=backend --filter=frontend
 
-# 3. Runner Stage (The final tiny image)
+# 3. Runner Stage
 FROM base AS runner
 WORKDIR /app
 
-# Create a non-root user for security
+# Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -40,26 +43,21 @@ RUN adduser --system --uid 1001 nextjs
 ENV NODE_ENV=production
 
 # --- ARRANGE FOLDERS ---
-# Your code does: path.resolve(__dirname, "../../frontend/dist")
-# So we must recreate that specific folder structure inside the container.
-
-# 1. Copy the backend built files
+# 1. Copy Backend
 COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
-# 2. Copy the frontend built files (so the backend can find them)
+# 2. Copy Frontend
 COPY --from=builder /app/apps/frontend/dist ./apps/frontend/dist
 
-# 3. Copy production dependencies
-# Ideally we would prune devDependencies here, but copying node_modules from builder is safest for a starter
+# 3. Copy Dependencies
 COPY --from=builder /app/node_modules ./node_modules
 
 # Set permissions
 USER nextjs
 
-# Expose the port
+# Expose port
 EXPOSE 3000
 
-# Start the server
-# We point directly to the index.js we just copied
+# Start server
 CMD ["node", "apps/backend/dist/index.js"]
