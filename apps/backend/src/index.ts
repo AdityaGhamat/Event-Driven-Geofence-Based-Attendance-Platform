@@ -30,6 +30,7 @@ class Server {
       "http://localhost:5173",
       `http://localhost:${port}`,
       "https://event-driven-geofence-based-attenda.vercel.app",
+      "https://event-driven-geofence-based-attendance-x952.onrender.com",
       "https://event-driven-geofence-based-attendance.onrender.com",
       "https://amazing-strudel-fbd896.netlify.app",
     ].filter(Boolean);
