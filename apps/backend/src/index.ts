@@ -33,6 +33,7 @@ class Server {
       "https://event-driven-geofence-based-attendance-x952.onrender.com",
       "https://event-driven-geofence-based-attendance.onrender.com",
       "https://amazing-strudel-fbd896.netlify.app",
+      "https://attendify.adityaghamat.in/",
     ].filter(Boolean);
 
     this.app.use(
