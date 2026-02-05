@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router"; // or "react-router-dom" depending on your version
+import { Link } from "react-router";
 import { loginSchema } from "../validations";
 import AuthLayout from "../layouts/AuthLayout";
 import { login } from "../api";
