@@ -9,7 +9,7 @@ services:
     env_file:
       - ./apps/backend/.env
     environment:
-      - PORT=3000
+      - PORT=3001
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
       - BULL_MQ_REDIS=redis://redis:6379
